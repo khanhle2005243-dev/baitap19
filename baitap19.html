@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Memory Card Game</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #f5f5f5;
+}
+
+h1 {
+  margin-top: 20px;
+}
+
+#moves {
+  margin: 10px;
+  font-weight: bold;
+}
+
+/* GRID */
+.game {
+  display: grid;
+  grid-template-columns: repeat(4, 100px);
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .game {
+    grid-template-columns: repeat(2, 100px);
+  }
+}
+
+/* CARD */
+.card {
+  width: 100px;
+  height: 120px;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+/* INNER */
+.inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+}
+
+/* FLIP */
+.card.flip .inner {
+  transform: rotateY(180deg);
+}
+
+/* FRONT + BACK */
+.front, .back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  line-height: 120px;
+  font-size: 30px;
+  border-radius: 10px;
+  backface-visibility: hidden;
+}
+
+.front {
+  background: #3498db;
+  color: white;
+}
+
+.back {
+  background: white;
+  transform: rotateY(180deg);
+}
+
+/* HOVER */
+.card:hover {
+  transform: scale(1.05);
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎮 Memory Card Game</h1>
+<p id="moves">Moves: 0</p>
+<button onclick="resetGame()">Reset</button>
+
+<div class="game" id="game"></div>
+
+<script>
+const icons = ["🍎","🍌","🍇","🍓"];
+let cards = [...icons, ...icons]; // 4 cặp
+let flipped = [];
+let lock = false;
+let moves = 0;
+
+/* SHUFFLE */
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+/* CREATE GAME */
+function init() {
+  const game = document.getElementById("game");
+  game.innerHTML = "";
+
+  cards = shuffle(cards);
+
+  cards.forEach((icon, index) => {
+    const card = document.createElement("div");
+    card.classList.add("card");
+    card.dataset.icon = icon;
+
+    card.innerHTML = `
+      <div class="inner">
+        <div class="front">?</div>
+        <div class="back">${icon}</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => flipCard(card));
+    game.appendChild(card);
+  });
+}
+
+/* FLIP */
+function flipCard(card) {
+  if(lock || card.classList.contains("flip")) return;
+
+  card.classList.add("flip");
+  flipped.push(card);
+
+  if(flipped.length === 2){
+    moves++;
+    document.getElementById("moves").textContent = "Moves: " + moves;
+
+    checkMatch();
+  }
+}
+
+/* CHECK MATCH */
+function checkMatch() {
+  const [c1, c2] = flipped;
+
+  if(c1.dataset.icon === c2.dataset.icon){
+    flipped = [];
+    checkWin();
+  } else {
+    lock = true;
+    setTimeout(() => {
+      c1.classList.remove("flip");
+      c2.classList.remove("flip");
+      flipped = [];
+      lock = false;
+    }, 800);
+  }
+}
+
+/* WIN */
+function checkWin() {
+  const all = document.querySelectorAll(".card.flip");
+  if(all.length === cards.length){
+    setTimeout(() => {
+      alert("🎉 Bạn đã thắng!");
+    }, 300);
+  }
+}
+
+/* RESET */
+function resetGame(){
+  moves = 0;
+  document.getElementById("moves").textContent = "Moves: 0";
+  flipped = [];
+  init();
+}
+
+init();
+</script>
+
+</body>
+</html>
